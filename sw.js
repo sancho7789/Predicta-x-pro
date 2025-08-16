@@ -1,0 +1,1 @@
+// PredictaXPro service worker placeholder
