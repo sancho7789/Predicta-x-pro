@@ -1,162 +1,147 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PredictaX Pro v1.0 God-Mode</title>
-  <link rel="icon" href="icon.png" type="image/png" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Predicta X Pro – God Mode</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.png">
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #111;
-      color: #eee;
-      margin: 0;
-      padding: 20px;
+      background: #0b0c10;
+      color: #f8f8f8;
       text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #1f2833;
+      padding: 15px;
     }
     h1 {
-      color: #ff4fb8;
+      margin: 0;
+      font-size: 1.6em;
+      color: #66fcf1;
     }
     textarea {
       width: 90%;
-      height: 120px;
-      margin-top: 10px;
+      height: 100px;
+      margin: 15px 0;
       padding: 10px;
       font-size: 14px;
-      background: #222;
-      color: #fff;
-      border: 1px solid #ff4fb8;
       border-radius: 6px;
+      border: none;
     }
     button {
-      margin-top: 15px;
-      padding: 12px 25px;
-      font-size: 16px;
-      font-weight: bold;
+      background: #45a29e;
       border: none;
+      padding: 10px 20px;
+      color: white;
+      font-size: 1em;
       border-radius: 6px;
       cursor: pointer;
     }
-    #predictBtn {
-      background-color: #ff4fb8;
-      color: white;
+    button:hover {
+      background: #66fcf1;
+      color: #0b0c10;
     }
-    #predictBtn:hover {
-      background-color: #e93fa0;
-    }
-    #resultBox {
+    .prediction-box {
       margin-top: 20px;
       padding: 15px;
-      border: 1px solid #444;
-      border-radius: 6px;
-      background: #1c1c1c;
+      background: #1f2833;
+      border-radius: 8px;
+      width: 90%;
+      margin-left: auto;
+      margin-right: auto;
     }
-    .pink {
-      color: #ff4fb8;
-      font-weight: bold;
+    .timestamp {
+      margin-top: 10px;
+      font-size: 1.1em;
     }
     .orange {
       color: orange;
       font-weight: bold;
     }
-    .safe {
-      color: lightgreen;
+    .pink {
+      color: hotpink;
       font-weight: bold;
-    }
-    .timer {
-      margin-top: 10px;
-      color: yellow;
-      font-size: 14px;
     }
   </style>
 </head>
 <body>
-  <h1>Predicta X Pro – God Mode 🔮</h1>
-  <p>Enter last multipliers (spaces, commas, or line breaks):</p>
-  <textarea id="multipliers" placeholder="e.g. 1.02 2.5 35.4 8.1"></textarea><br />
-  <button id="predictBtn">Run Prediction</button>
+  <header>
+    <h1>🔮 Predicta X Pro – God Mode</h1>
+  </header>
 
-  <div id="resultBox">
-    <p id="prediction">Prediction will appear here...</p>
-    <p id="timestamp"></p>
-  </div>
-  <p class="timer" id="autoTimer"></p>
+  <main>
+    <p>Paste up to <strong>500 multipliers</strong> (latest last):</p>
+    <textarea id="historyInput" placeholder="e.g. 1.2, 2.1, 7.5, 30.0, ..."></textarea>
+    <br>
+    <button onclick="runPrediction()">Run Prediction</button>
+
+    <div class="prediction-box" id="resultsBox">
+      <h2>Prediction Results</h2>
+      <div id="orangeResult" class="timestamp orange">⏳ Next Orange Window: --</div>
+      <div id="pinkResult" class="timestamp pink">⏳ Next Pink Window: --</div>
+    </div>
+  </main>
 
   <script>
-    const predictBtn = document.getElementById("predictBtn");
-    const predictionEl = document.getElementById("prediction");
-    const timestampEl = document.getElementById("timestamp");
-    const autoTimerEl = document.getElementById("autoTimer");
-
-    let autoRefreshSeconds = 5;
-    let countdown = autoRefreshSeconds;
-
-    function analyze(mults) {
-      if (mults.length < 5) {
-        return "Not enough data. Enter at least 5 results.";
-      }
-
-      const last = mults[mults.length - 1];
-      const avg = mults.slice(-10).reduce((a, b) => a + b, 0) / Math.min(10, mults.length);
-
-      let msg = "";
-      if (avg < 2) {
-        msg = "⚡ Multiple lows — likely Safe round.";
-      } else if (avg < 10) {
-        msg = "📈 Mid odds building.";
-      } else {
-        msg = "🚀 High volatility zone.";
-      }
-
-      // Pink (>=30) and Orange (>=50) detection with separate timestamps
-      const pinkSoon = mults.slice(-20).some(v => v >= 25 && v < 40);
-      const orangeSoon = mults.slice(-20).some(v => v >= 40);
-
-      let timeNow = new Date();
-      let baseMin = timeNow.getMinutes();
-      let baseSec = timeNow.getSeconds();
-
-      if (pinkSoon) {
-        msg += ` <span class='pink'>💖 Pink may hit soon</span>`;
-        timestampEl.innerHTML = Pink window: ${baseMin}:${String((baseSec + 30) % 60).padStart(2,"0")};
-      } else {
-        timestampEl.innerHTML = "";
-      }
-
-      if (orangeSoon) {
-        msg += ` <span class='orange'>🟧 Orange odds building</span>`;
-        timestampEl.innerHTML += <br>Orange window: ${baseMin}:${String((baseSec + 60) % 60).padStart(2,"0")};
-      }
-
-      return msg;
-    }
-
     function runPrediction() {
-      const raw = document.getElementById("multipliers").value.trim();
-      if (!raw) {
-        predictionEl.innerText = "Please enter some multipliers first.";
+      const input = document.getElementById("historyInput").value.trim();
+      if (!input) {
+        alert("Please paste multipliers first.");
         return;
       }
 
-      let mults = raw
-        .split(/[\s,]+/)
-        .map(v => parseFloat(v.replace("x", "")))
-        .filter(v => !isNaN(v));
+      const multipliers = input.split(/[\s,]+/).map(Number).filter(x => !isNaN(x));
 
-      predictionEl.innerHTML = analyze(mults);
+      if (multipliers.length < 10) {
+        alert("Please enter at least 10 multipliers for better accuracy.");
+        return;
+      }
+
+      // Find last indexes of pink (>=30x) and orange (>=10x but <30x)
+      const lastPink = multipliers.map((m, i) => (m >= 30 ? i : -1)).filter(i => i >= 0).pop();
+      const lastOrange = multipliers.map((m, i) => (m >= 10 && m < 30 ? i : -1)).filter(i => i >= 0).pop();
+
+      const total = multipliers.length;
+
+      // Estimate spacing (avg gap between occurrences)
+      const pinkGap = estimateGap(multipliers, 30);
+      const orangeGap = estimateGap(multipliers, 10, 30);
+
+      // Predict next positions
+      const nextPinkIndex = lastPink !== undefined ? lastPink + pinkGap : total + pinkGap;
+      const nextOrangeIndex = lastOrange !== undefined ? lastOrange + orangeGap : total + orangeGap;
+
+      // Convert to timestamps (simple round = 8s approx.)
+      const baseTime = new Date();
+      const pinkTime = new Date(baseTime.getTime() + (nextPinkIndex - total) * 8000);
+      const orangeTime = new Date(baseTime.getTime() + (nextOrangeIndex - total) * 8000);
+
+      document.getElementById("pinkResult").textContent =
+        "⏳ Next Pink Window: " + pinkTime.toLocaleTimeString();
+
+      document.getElementById("orangeResult").textContent =
+        "⏳ Next Orange Window: " + orangeTime.toLocaleTimeString();
     }
 
-    // Auto-refresh loop
-    setInterval(() => {
-      countdown--;
-      autoTimerEl.innerText = Next auto prediction in ${countdown}s;
-      if (countdown <= 0) {
-        runPrediction();
-        countdown = autoRefreshSeconds;
-      }
-    }, 1000);
-
-    predictBtn.addEventListener("click", runPrediction);
+    function estimateGap(multipliers, min, max = Infinity) {
+      let gaps = [];
+      let lastIndex = null;
+      multipliers.forEach((m, i) => {
+        if (m >= min && m < max) {
+          if (lastIndex !== null) {
+            gaps.push(i - lastIndex);
+          }
+          lastIndex = i;
+        }
+      });
+      if (gaps.length === 0) return 20; // default fallback
+      return Math.round(gaps.reduce((a, b) => a + b, 0) / gaps.length);
+    }
   </script>
 </body>
 </html>
